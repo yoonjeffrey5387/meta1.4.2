@@ -1,0 +1,280 @@
+@startuml Sistema de Monitoreo IoT
+
+!theme plain
+skinparam backgroundColor #F8F9FA
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #2C3E50
+skinparam classFontColor #2C3E50
+skinparam packageBackgroundColor #E8F4FD
+skinparam packageBorderColor #3498DB
+
+title Sistema de Monitoreo IoT - Patrones de Diseño\nSingleton + Observer + Strategy
+
+' ==========================================
+' ENUMERACIONES Y CLASES DE DOMINIO
+' ==========================================
+
+enum NivelAlerta {
+    CRITICO
+    ADVERTENCIA
+    INFORMATIVO
+}
+
+class Sensor {
+    - String id
+    - String tipo
+    - double valor
+    - String ubicacion
+    - Date ultimaActualizacion
+    --
+    + getId() : String
+    + getTipo() : String
+    + getValor() : double
+    + setValor(double) : void
+    + getUbicacion() : String
+    + getUltimaActualizacion() : Date
+    + setUltimaActualizacion(Date) : void
+    + toString() : String
+}
+
+class Alerta {
+    - String idSensor
+    - String mensaje
+    - NivelAlerta nivel
+    - Date fechaHora
+    --
+    + getIdSensor() : String
+    + getMensaje() : String
+    + getNivel() : NivelAlerta
+    + getFechaHora() : Date
+    + toString() : String
+}
+
+' ==========================================
+' PATRÓN SINGLETON
+' ==========================================
+
+package "Singleton Pattern" {
+    class GestorSensores {
+        - static GestorSensores instancia
+        - Map<String, Sensor> sensores
+        --
+        - GestorSensores()
+        + obtenerInstancia() : GestorSensores
+        + registrarSensor(Sensor) : void
+        + actualizarValorSensor(String, double) : void
+        + obtenerSensor(String) : Sensor
+        + eliminarSensor(String) : void
+        + obtenerTodosSensores() : List<Sensor>
+        + obtenerSensoresPorTipo(String) : List<Sensor>
+        + obtenerEstadisticas() : Map<String, Object>
+        + obtenerCantidadSensores() : int
+    }
+}
+
+' ==========================================
+' PATRÓN OBSERVER
+' ==========================================
+
+package "Observer Pattern" {
+    interface SujetoAlerta {
+        + registrarObservador(ObservadorAlerta) : void
+        + eliminarObservador(ObservadorAlerta) : void
+        + notificarObservadores(Alerta) : void
+    }
+
+    interface ObservadorAlerta {
+        + actualizar(Alerta) : void
+        + obtenerTipoObservador() : String
+    }
+
+    class NotificadorAlertas {
+        - static NotificadorAlertas instancia
+        - List<ObservadorAlerta> observadores
+        - EstrategiaAnalisis estrategia
+        --
+        - NotificadorAlertas()
+        + obtenerInstancia() : NotificadorAlertas
+        + verificarYNotificar(Sensor) : void
+        + registrarObservador(ObservadorAlerta) : void
+        + eliminarObservador(ObservadorAlerta) : void
+        + notificarObservadores(Alerta) : void
+        + establecerEstrategiaAnalisis(EstrategiaAnalisis) : void
+        + obtenerCantidadObservadores() : int
+        + obtenerObservadores() : List<ObservadorAlerta>
+        + obtenerEstrategiaActual() : EstrategiaAnalisis
+    }
+
+    ' Concrete Observers
+    class NotificadorEmail {
+        + actualizar(Alerta) : void
+        + obtenerTipoObservador() : String
+        - enviarEmailReal(Alerta, String) : void
+    }
+
+    class NotificadorDashboard {
+        + actualizar(Alerta) : void
+        + obtenerTipoObservador() : String
+        - actualizarDashboardReal(Alerta) : void
+    }
+
+    class NotificadorSMS {
+        + actualizar(Alerta) : void
+        + obtenerTipoObservador() : String
+        - enviarSMSReal(Alerta) : void
+    }
+
+    class RegistradorLogs {
+        - List<String> logs
+        - SimpleDateFormat formatter
+        --
+        + actualizar(Alerta) : void
+        + obtenerTipoObservador() : String
+        + obtenerLogs() : List<String>
+        + obtenerLogsPorNivel(NivelAlerta) : List<String>
+        + limpiarLogs() : void
+        + obtenerCantidadLogs() : int
+        - escribirLogReal(String) : void
+    }
+}
+
+' ==========================================
+' PATRÓN STRATEGY
+' ==========================================
+
+package "Strategy Pattern" {
+    interface EstrategiaAnalisis {
+        + analizar(Sensor) : Alerta
+    }
+
+    class EstrategiaAnalisisTemperatura {
+        - static final double UMBRAL_CRITICO
+        - static final double UMBRAL_ADVERTENCIA
+        --
+        + analizar(Sensor) : Alerta
+    }
+
+    class EstrategiaAnalisisVibracion {
+        - static final double UMBRAL_CRITICO
+        - static final double UMBRAL_ADVERTENCIA
+        --
+        + analizar(Sensor) : Alerta
+    }
+
+    class EstrategiaAnalisisEnergia {
+        - static final double UMBRAL_ENERGIA
+        --
+        + analizar(Sensor) : Alerta
+    }
+
+    class EstrategiaAnalisisCalidadAire {
+        - static final double UMBRAL_CRITICO
+        - static final double UMBRAL_ADVERTENCIA
+        --
+        + analizar(Sensor) : Alerta
+    }
+
+    class EstrategiaAnalisisHumedad {
+        - static final double UMBRAL_CRITICO_ALTO
+        - static final double UMBRAL_CRITICO_BAJO
+        - static final double UMBRAL_ADVERTENCIA_ALTO
+        - static final double UMBRAL_ADVERTENCIA_BAJO
+        --
+        + analizar(Sensor) : Alerta
+    }
+
+    class EstrategiaAnalisisBasica {
+        + analizar(Sensor) : Alerta
+    }
+}
+
+' ==========================================
+' CLASES PRINCIPALES
+' ==========================================
+
+package "Main Classes" {
+    class SistemaMonitoreoIoT {
+        + main(String[]) : void
+        - configurarSistema() : void
+        - simularOperaciones() : void
+        - mostrarEstadisticasFinales(GestorSensores, NotificadorAlertas) : void
+    }
+
+    class PruebaSistemaIoT {
+        + main(String[]) : void
+        - realizarPruebasAdicionales(GestorSensores, NotificadorAlertas, RegistradorLogs) : void
+        - mostrarEstadisticasDetalladas(GestorSensores, RegistradorLogs) : void
+    }
+}
+
+' ==========================================
+' RELACIONES
+' ==========================================
+
+' Relaciones de dominio
+Sensor ||--o{ Alerta : genera
+Alerta ||--|| NivelAlerta : tiene
+
+' Relaciones Singleton
+GestorSensores ||--o{ Sensor : gestiona
+GestorSensores ..> NotificadorAlertas : usa
+
+' Relaciones Observer
+NotificadorAlertas ..|> SujetoAlerta : implements
+NotificadorAlertas ||--o{ ObservadorAlerta : notifica
+NotificadorEmail ..|> ObservadorAlerta : implements
+NotificadorDashboard ..|> ObservadorAlerta : implements
+NotificadorSMS ..|> ObservadorAlerta : implements
+RegistradorLogs ..|> ObservadorAlerta : implements
+
+' Relaciones Strategy
+NotificadorAlertas ||--|| EstrategiaAnalisis : usa
+EstrategiaAnalisisTemperatura ..|> EstrategiaAnalisis : implements
+EstrategiaAnalisisVibracion ..|> EstrategiaAnalisis : implements
+EstrategiaAnalisisEnergia ..|> EstrategiaAnalisis : implements
+EstrategiaAnalisisCalidadAire ..|> EstrategiaAnalisis : implements
+EstrategiaAnalisisHumedad ..|> EstrategiaAnalisis : implements
+EstrategiaAnalisisBasica ..|> EstrategiaAnalisis : implements
+EstrategiaAnalisis ||--o{ Alerta : crea
+
+' Relaciones principales
+SistemaMonitoreoIoT ..> GestorSensores : usa
+SistemaMonitoreoIoT ..> NotificadorAlertas : usa
+PruebaSistemaIoT ..> GestorSensores : prueba
+PruebaSistemaIoT ..> NotificadorAlertas : prueba
+PruebaSistemaIoT ..> RegistradorLogs : prueba
+
+' ==========================================
+' NOTAS EXPLICATIVAS
+' ==========================================
+
+note top of GestorSensores
+  <b>Singleton Pattern</b>
+  • Garantiza una única instancia
+  • Thread-safe con double-checked locking
+  • Gestión centralizada de sensores
+end note
+
+note top of NotificadorAlertas
+  <b>Observer + Strategy</b>
+  • Sujeto que notifica a observadores
+  • Usa estrategias para análisis
+  • Singleton para coordinación
+end note
+
+note right of EstrategiaAnalisis
+  <b>Strategy Pattern</b>
+  • Algoritmos intercambiables
+  • Especialización por tipo de sensor
+  • Cambio dinámico en runtime
+end note
+
+note bottom of ObservadorAlerta
+  <b>Observer Pattern</b>
+  • Reacción a notificaciones
+  • Desacoplamiento total
+  • Múltiples canales de notificación
+end note
+
+@enduml
+
