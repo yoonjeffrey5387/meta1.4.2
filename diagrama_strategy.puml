@@ -1,0 +1,216 @@
+@startuml Patrón Strategy - Sistema IoT
+
+!theme plain
+skinparam backgroundColor #F8F9FA
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #2C3E50
+skinparam classFontColor #2C3E50
+skinparam packageBackgroundColor #E8F4FD
+skinparam packageBorderColor #3498DB
+skinparam noteBackgroundColor #FFF3CD
+skinparam noteBorderColor #FFC107
+skinparam arrowColor #2C3E50
+skinparam arrowThickness 2
+skinparam interfaceBackgroundColor #E8F5E8
+skinparam interfaceBorderColor #28A745
+
+title <size:20><b>🎯 Patrón Strategy</b></size>\n<size:14>Estrategias de Análisis de Sensores IoT</size>\n<size:12>Meta 1.4.2 - Yoon Jeffrey</size>
+
+' ==========================================
+' INTERFAZ STRATEGY
+' ==========================================
+
+package "Strategy Interface" #E8F5E8 {
+    interface EstrategiaAnalisis {
+        + analizar(Sensor) : Alerta
+    }
+    
+    note top of EstrategiaAnalisis
+        <b>🎯 Strategy Interface</b>
+        • Define el contrato para análisis
+        • Algoritmos intercambiables
+        • Cambio dinámico en runtime
+    end note
+}
+
+' ==========================================
+' ESTRATEGIAS CONCRETAS
+' ==========================================
+
+package "Estrategias de Análisis" #F0F8FF {
+    class EstrategiaAnalisisTemperatura {
+        - static final double UMBRAL_CRITICO = 80.0
+        - static final double UMBRAL_ADVERTENCIA = 70.0
+        --
+        + analizar(Sensor) : Alerta
+        - determinarNivelAlerta(double) : NivelAlerta
+        - generarMensajeAlerta(double) : String
+    }
+    
+    class EstrategiaAnalisisHumedad {
+        - static final double UMBRAL_CRITICO_ALTO = 90.0
+        - static final double UMBRAL_CRITICO_BAJO = 10.0
+        - static final double UMBRAL_ADVERTENCIA_ALTO = 80.0
+        - static final double UMBRAL_ADVERTENCIA_BAJO = 20.0
+        --
+        + analizar(Sensor) : Alerta
+        - determinarNivelAlerta(double) : NivelAlerta
+        - generarMensajeAlerta(double) : String
+    }
+    
+    class EstrategiaAnalisisCalidadAire {
+        - static final double UMBRAL_CRITICO = 300.0
+        - static final double UMBRAL_ADVERTENCIA = 200.0
+        --
+        + analizar(Sensor) : Alerta
+        - determinarNivelAlerta(double) : NivelAlerta
+        - generarMensajeAlerta(double) : String
+    }
+    
+    class EstrategiaAnalisisEnergia {
+        - static final double UMBRAL_ENERGIA = 1000.0
+        --
+        + analizar(Sensor) : Alerta
+        - determinarNivelAlerta(double) : NivelAlerta
+        - generarMensajeAlerta(double) : String
+    }
+    
+    class EstrategiaAnalisisVibracion {
+        - static final double UMBRAL_CRITICO = 5.0
+        - static final double UMBRAL_ADVERTENCIA = 3.0
+        --
+        + analizar(Sensor) : Alerta
+        - determinarNivelAlerta(double) : NivelAlerta
+        - generarMensajeAlerta(double) : String
+    }
+    
+    class EstrategiaAnalisisBasica {
+        --
+        + analizar(Sensor) : Alerta
+        - generarAlertaInformativa(Sensor) : Alerta
+    }
+}
+
+' ==========================================
+' CLASES DE DOMINIO
+' ==========================================
+
+package "Domain Classes" #FFF8E1 {
+    class Sensor {
+        - String id
+        - String tipo
+        - double valor
+        - String ubicacion
+        - Date ultimaActualizacion
+        --
+        + getId() : String
+        + getTipo() : String
+        + getValor() : double
+        + setValor(double) : void
+        + getUbicacion() : String
+        + getUltimaActualizacion() : Date
+        + setUltimaActualizacion(Date) : void
+        + toString() : String
+    }
+    
+    class Alerta {
+        - String idSensor
+        - String mensaje
+        - NivelAlerta nivel
+        - Date fechaHora
+        --
+        + getIdSensor() : String
+        + getMensaje() : String
+        + getNivel() : NivelAlerta
+        + getFechaHora() : Date
+        + toString() : String
+    }
+    
+    enum NivelAlerta {
+        CRITICO
+        ADVERTENCIA
+        INFORMATIVO
+    }
+}
+
+' ==========================================
+' CONTEXTO QUE USA LA ESTRATEGIA
+' ==========================================
+
+package "Context" #FFE8E8 {
+    class NotificadorAlertas {
+        - EstrategiaAnalisis estrategia
+        - List<ObservadorAlerta> observadores
+        --
+        + establecerEstrategiaAnalisis(EstrategiaAnalisis) : void
+        + verificarYNotificar(Sensor) : void
+        + obtenerEstrategiaActual() : EstrategiaAnalisis
+    }
+}
+
+' ==========================================
+' RELACIONES
+' ==========================================
+
+' Relaciones Strategy
+EstrategiaAnalisisTemperatura ..|> EstrategiaAnalisis : implements
+EstrategiaAnalisisHumedad ..|> EstrategiaAnalisis : implements
+EstrategiaAnalisisCalidadAire ..|> EstrategiaAnalisis : implements
+EstrategiaAnalisisEnergia ..|> EstrategiaAnalisis : implements
+EstrategiaAnalisisVibracion ..|> EstrategiaAnalisis : implements
+EstrategiaAnalisisBasica ..|> EstrategiaAnalisis : implements
+
+' Relaciones de dominio
+Sensor ||--o{ Alerta : genera
+Alerta ||--|| NivelAlerta : tiene
+
+' Relaciones con contexto
+NotificadorAlertas ||--|| EstrategiaAnalisis : usa
+EstrategiaAnalisis ||--o{ Alerta : crea
+
+' ==========================================
+' NOTAS EXPLICATIVAS
+' ==========================================
+
+note right of EstrategiaAnalisisTemperatura
+    <b>🌡️ Análisis de Temperatura</b>
+    • Detecta sobrecalentamiento
+    • Umbral crítico: 80°C
+    • Umbral advertencia: 70°C
+end note
+
+note right of EstrategiaAnalisisHumedad
+    <b>💧 Análisis de Humedad</b>
+    • Detecta humedad extrema
+    • Crítico alto: 90%
+    • Crítico bajo: 10%
+end note
+
+note right of EstrategiaAnalisisCalidadAire
+    <b>🌬️ Análisis de Calidad del Aire</b>
+    • Detecta contaminación
+    • Umbral crítico: 300 ppm
+    • Umbral advertencia: 200 ppm
+end note
+
+note right of EstrategiaAnalisisEnergia
+    <b>⚡ Análisis de Energía</b>
+    • Detecta consumo excesivo
+    • Umbral: 1000W
+end note
+
+note right of EstrategiaAnalisisVibracion
+    <b>📳 Análisis de Vibración</b>
+    • Detecta movimientos anómalos
+    • Umbral crítico: 5.0
+    • Umbral advertencia: 3.0
+end note
+
+note bottom of NotificadorAlertas
+    <b>🎯 Contexto Strategy</b>
+    • Usa estrategias para análisis
+    • Cambio dinámico de algoritmo
+    • Desacoplamiento total
+end note
+
+@enduml

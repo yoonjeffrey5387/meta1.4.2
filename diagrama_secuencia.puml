@@ -1,0 +1,202 @@
+@startuml Diagrama de Secuencia - Sistema IoT
+
+!theme plain
+skinparam backgroundColor #F8F9FA
+skinparam participantBackgroundColor #FFFFFF
+skinparam participantBorderColor #2C3E50
+skinparam participantFontColor #2C3E50
+skinparam actorBackgroundColor #E8F5E8
+skinparam actorBorderColor #28A745
+skinparam noteBackgroundColor #FFF3CD
+skinparam noteBorderColor #FFC107
+skinparam arrowColor #2C3E50
+skinparam arrowThickness 2
+
+title <size:20><b>🔄 Diagrama de Secuencia</b></size>\n<size:14>Flujo del Sistema de Monitoreo IoT</size>\n<size:12>Meta 1.4.2 - Yoon Jeffrey</size>
+
+actor "Usuario" as Usuario
+participant "SistemaMonitoreoIoT" as Sistema
+participant "GestorSensores" as Gestor
+participant "NotificadorAlertas" as Notificador
+participant "EstrategiaAnalisis" as Estrategia
+participant "Sensor" as Sensor
+participant "Alerta" as Alerta
+participant "Observadores" as Observadores
+
+== 🚀 Inicialización del Sistema ==
+
+Usuario -> Sistema: ejecutar sistema
+activate Sistema
+
+Sistema -> Gestor: obtenerInstancia()
+activate Gestor
+Gestor --> Sistema: instancia única
+deactivate Gestor
+
+Sistema -> Notificador: obtenerInstancia()
+activate Notificador
+Notificador --> Sistema: instancia única
+deactivate Notificador
+
+Sistema -> Gestor: registrarSensor(sensor1)
+activate Gestor
+Gestor -> Gestor: agregar a Map<String, Sensor>
+Gestor --> Sistema: sensor registrado
+deactivate Gestor
+
+Sistema -> Gestor: registrarSensor(sensor2)
+activate Gestor
+Gestor -> Gestor: agregar a Map<String, Sensor>
+Gestor --> Sistema: sensor registrado
+deactivate Gestor
+
+Sistema -> Notificador: registrarObservador(email)
+activate Notificador
+Notificador -> Notificador: agregar a List<ObservadorAlerta>
+Notificador --> Sistema: observador registrado
+deactivate Notificador
+
+Sistema -> Notificador: registrarObservador(sms)
+activate Notificador
+Notificador -> Notificador: agregar a List<ObservadorAlerta>
+Notificador --> Sistema: observador registrado
+deactivate Notificador
+
+Sistema -> Notificador: establecerEstrategiaAnalisis(temperatura)
+activate Notificador
+Notificador -> Notificador: set estrategia
+Notificador --> Sistema: estrategia establecida
+deactivate Notificador
+
+note right of Sistema
+    <b>🎯 Configuración Inicial</b>
+    • Singleton instances
+    • Sensores registrados
+    • Observadores configurados
+    • Estrategia establecida
+end note
+
+== 🔄 Ciclo de Monitoreo ==
+
+loop Cada 5 segundos
+    Sistema -> Gestor: obtenerTodosSensores()
+    activate Gestor
+    Gestor --> Sistema: List<Sensor>
+    deactivate Gestor
+    
+    Sistema -> Sensor: setValor(nuevoValor)
+    activate Sensor
+    Sensor -> Sensor: actualizar valor y timestamp
+    Sensor --> Sistema: valor actualizado
+    deactivate Sensor
+    
+    Sistema -> Notificador: verificarYNotificar(sensor)
+    activate Notificador
+    
+    Notificador -> Estrategia: analizar(sensor)
+    activate Estrategia
+    Estrategia -> Estrategia: evaluar umbrales
+    Estrategia -> Estrategia: determinar nivel de alerta
+    Estrategia --> Notificador: Alerta (si es necesaria)
+    deactivate Estrategia
+    
+    alt Alerta generada
+        Notificador -> Alerta: new Alerta()
+        activate Alerta
+        Alerta --> Notificador: alerta creada
+        deactivate Alerta
+        
+        Notificador -> Notificador: notificarObservadores(alerta)
+        activate Observadores
+        
+        par Notificación Email
+            Observadores -> Observadores: enviarEmailReal()
+        end
+        
+        par Notificación SMS
+            Observadores -> Observadores: enviarSMSReal()
+        end
+        
+        par Notificación Dashboard
+            Observadores -> Observadores: actualizarDashboardReal()
+        end
+        
+        par Registro de Logs
+            Observadores -> Observadores: escribirLogReal()
+        end
+        
+        deactivate Observadores
+        
+        note right of Notificador
+            <b>📢 Notificación Automática</b>
+            • Email a administradores
+            • SMS a técnicos
+            • Dashboard en tiempo real
+            • Logs para auditoría
+        end note
+    else Sin alerta
+        Notificador -> Notificador: continuar monitoreo
+    end
+    
+    deactivate Notificador
+end
+
+== 📊 Estadísticas Finales ==
+
+Sistema -> Gestor: obtenerEstadisticas()
+activate Gestor
+Gestor --> Sistema: Map<String, Object>
+deactivate Gestor
+
+Sistema -> Notificador: obtenerCantidadObservadores()
+activate Notificador
+Notificador --> Sistema: cantidad observadores
+deactivate Notificador
+
+Sistema -> Sistema: mostrarEstadisticasFinales()
+activate Sistema
+Sistema --> Usuario: estadísticas del sistema
+deactivate Sistema
+
+note right of Sistema
+    <b>📈 Estadísticas Finales</b>
+    • Total de sensores
+    • Alertas generadas
+    • Observadores activos
+    • Tiempo de ejecución
+end note
+
+== 🧪 Pruebas del Sistema ==
+
+Usuario -> Sistema: ejecutar pruebas
+activate Sistema
+
+Sistema -> Gestor: obtenerSensoresPorTipo("temperatura")
+activate Gestor
+Gestor --> Sistema: List<Sensor>
+deactivate Gestor
+
+Sistema -> Notificador: verificarYNotificar(sensorCritico)
+activate Notificador
+Notificador -> Estrategia: analizar(sensorCritico)
+activate Estrategia
+Estrategia --> Notificador: Alerta CRITICA
+deactivate Estrategia
+Notificador -> Observadores: notificarObservadores(alertaCritica)
+activate Observadores
+Observadores --> Notificador: notificaciones enviadas
+deactivate Observadores
+deactivate Notificador
+
+Sistema --> Usuario: pruebas completadas
+deactivate Sistema
+
+note right of Sistema
+    <b>🧪 Pruebas del Sistema</b>
+    • Validación de funcionalidad
+    • Pruebas de alertas críticas
+    • Verificación de notificaciones
+    • Estadísticas detalladas
+end note
+
+@enduml

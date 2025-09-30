@@ -1,0 +1,248 @@
+@startuml Patrón Singleton - Sistema IoT
+
+!theme plain
+skinparam backgroundColor #F8F9FA
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #2C3E50
+skinparam classFontColor #2C3E50
+skinparam packageBackgroundColor #E8F4FD
+skinparam packageBorderColor #3498DB
+skinparam noteBackgroundColor #FFF3CD
+skinparam noteBorderColor #FFC107
+skinparam arrowColor #2C3E50
+skinparam arrowThickness 2
+skinparam interfaceBackgroundColor #E8F5E8
+skinparam interfaceBorderColor #28A745
+
+title <size:20><b>🔒 Patrón Singleton</b></size>\n<size:14>Gestión Centralizada de Recursos IoT</size>\n<size:12>Meta 1.4.2 - Yoon Jeffrey</size>
+
+' ==========================================
+' SINGLETON PRINCIPAL - GESTOR SENSORES
+' ==========================================
+
+package "Singleton Pattern - GestorSensores" #F0F8FF {
+    class GestorSensores {
+        - static volatile GestorSensores instancia
+        - Map<String, Sensor> sensores
+        - Object lock = new Object()
+        --
+        - GestorSensores()
+        + obtenerInstancia() : GestorSensores
+        + registrarSensor(Sensor) : void
+        + actualizarValorSensor(String, double) : void
+        + obtenerSensor(String) : Sensor
+        + eliminarSensor(String) : void
+        + obtenerTodosSensores() : List<Sensor>
+        + obtenerSensoresPorTipo(String) : List<Sensor>
+        + obtenerEstadisticas() : Map<String, Object>
+        + obtenerCantidadSensores() : int
+        + limpiarSensores() : void
+        + obtenerSensoresCriticos() : List<Sensor>
+    }
+    
+    note top of GestorSensores
+        <b>🔒 Singleton Thread-Safe</b>
+        • Double-checked locking
+        • Volatile para visibilidad
+        • Constructor privado
+        • Instancia única garantizada
+    end note
+}
+
+' ==========================================
+' SINGLETON SECUNDARIO - NOTIFICADOR
+' ==========================================
+
+package "Singleton Pattern - NotificadorAlertas" #FFF8E1 {
+    class NotificadorAlertas {
+        - static volatile NotificadorAlertas instancia
+        - List<ObservadorAlerta> observadores
+        - EstrategiaAnalisis estrategia
+        - Object lock = new Object()
+        --
+        - NotificadorAlertas()
+        + obtenerInstancia() : NotificadorAlertas
+        + verificarYNotificar(Sensor) : void
+        + registrarObservador(ObservadorAlerta) : void
+        + eliminarObservador(ObservadorAlerta) : void
+        + notificarObservadores(Alerta) : void
+        + establecerEstrategiaAnalisis(EstrategiaAnalisis) : void
+        + obtenerCantidadObservadores() : int
+        + obtenerObservadores() : List<ObservadorAlerta>
+        + obtenerEstrategiaActual() : EstrategiaAnalisis
+    }
+    
+    note top of NotificadorAlertas
+        <b>🔒 Singleton Thread-Safe</b>
+        • Coordinación centralizada
+        • Gestión de observadores
+        • Estrategia de análisis
+        • Notificaciones automáticas
+    end note
+}
+
+' ==========================================
+' CLASES DE DOMINIO
+' ==========================================
+
+package "Domain Classes" #FFE8E8 {
+    class Sensor {
+        - String id
+        - String tipo
+        - double valor
+        - String ubicacion
+        - Date ultimaActualizacion
+        --
+        + getId() : String
+        + getTipo() : String
+        + getValor() : double
+        + setValor(double) : void
+        + getUbicacion() : String
+        + getUltimaActualizacion() : Date
+        + setUltimaActualizacion(Date) : void
+        + toString() : String
+    }
+    
+    class Alerta {
+        - String idSensor
+        - String mensaje
+        - NivelAlerta nivel
+        - Date fechaHora
+        --
+        + getIdSensor() : String
+        + getMensaje() : String
+        + getNivel() : NivelAlerta
+        + getFechaHora() : Date
+        + toString() : String
+    }
+    
+    enum NivelAlerta {
+        CRITICO
+        ADVERTENCIA
+        INFORMATIVO
+    }
+}
+
+' ==========================================
+' INTERFACES Y ESTRATEGIAS
+' ==========================================
+
+package "Interfaces & Strategies" #E8F5E8 {
+    interface ObservadorAlerta {
+        + actualizar(Alerta) : void
+        + obtenerTipoObservador() : String
+    }
+    
+    interface EstrategiaAnalisis {
+        + analizar(Sensor) : Alerta
+    }
+    
+    class EstrategiaAnalisisTemperatura {
+        + analizar(Sensor) : Alerta
+    }
+    
+    class EstrategiaAnalisisHumedad {
+        + analizar(Sensor) : Alerta
+    }
+    
+    class EstrategiaAnalisisCalidadAire {
+        + analizar(Sensor) : Alerta
+    }
+}
+
+' ==========================================
+' CLASES PRINCIPALES DEL SISTEMA
+' ==========================================
+
+package "Main System Classes" #F0F8FF {
+    class SistemaMonitoreoIoT {
+        + main(String[]) : void
+        - configurarSistema() : void
+        - simularOperaciones() : void
+        - mostrarEstadisticasFinales() : void
+    }
+    
+    class PruebaSistemaIoT {
+        + main(String[]) : void
+        - realizarPruebasAdicionales() : void
+        - mostrarEstadisticasDetalladas() : void
+    }
+}
+
+' ==========================================
+' RELACIONES
+' ==========================================
+
+' Relaciones Singleton
+GestorSensores ||--o{ Sensor : gestiona
+NotificadorAlertas ||--o{ ObservadorAlerta : coordina
+NotificadorAlertas ||--|| EstrategiaAnalisis : usa
+
+' Relaciones de dominio
+Sensor ||--o{ Alerta : genera
+Alerta ||--|| NivelAlerta : tiene
+
+' Relaciones con estrategias
+EstrategiaAnalisisTemperatura ..|> EstrategiaAnalisis : implements
+EstrategiaAnalisisHumedad ..|> EstrategiaAnalisis : implements
+EstrategiaAnalisisCalidadAire ..|> EstrategiaAnalisis : implements
+
+' Relaciones principales
+SistemaMonitoreoIoT ..> GestorSensores : usa
+SistemaMonitoreoIoT ..> NotificadorAlertas : usa
+PruebaSistemaIoT ..> GestorSensores : prueba
+PruebaSistemaIoT ..> NotificadorAlertas : prueba
+
+' ==========================================
+' NOTAS EXPLICATIVAS
+' ==========================================
+
+note right of GestorSensores
+    <b>🏭 Gestor de Sensores</b>
+    • Única instancia en el sistema
+    • Thread-safe con double-checked locking
+    • Gestión centralizada de sensores
+    • Estadísticas y monitoreo
+end note
+
+note right of NotificadorAlertas
+    <b>📢 Notificador de Alertas</b>
+    • Coordinación centralizada
+    • Gestión de observadores
+    • Integración con estrategias
+    • Notificaciones automáticas
+end note
+
+note bottom of Sensor
+    <b>📡 Sensor IoT</b>
+    • Entidad de dominio
+    • Gestionado por Singleton
+    • Datos en tiempo real
+    • Ubicación y tipo
+end note
+
+note bottom of Alerta
+    <b>🚨 Alerta del Sistema</b>
+    • Generada por análisis
+    • Nivel de criticidad
+    • Timestamp de creación
+    • Notificada a observadores
+end note
+
+note left of SistemaMonitoreoIoT
+    <b>🎯 Sistema Principal</b>
+    • Punto de entrada
+    • Configuración inicial
+    • Simulación de operaciones
+    • Estadísticas finales
+end note
+
+note left of PruebaSistemaIoT
+    <b>🧪 Sistema de Pruebas</b>
+    • Pruebas del sistema
+    • Validación de funcionalidad
+    • Estadísticas detalladas
+    • Verificación de patrones
+end note
+
+@enduml

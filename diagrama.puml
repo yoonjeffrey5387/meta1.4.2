@@ -7,8 +7,12 @@ skinparam classBorderColor #2C3E50
 skinparam classFontColor #2C3E50
 skinparam packageBackgroundColor #E8F4FD
 skinparam packageBorderColor #3498DB
+skinparam noteBackgroundColor #FFF3CD
+skinparam noteBorderColor #FFC107
+skinparam arrowColor #2C3E50
+skinparam arrowThickness 2
 
-title Sistema de Monitoreo IoT - Patrones de Diseño\nSingleton + Observer + Strategy
+title <size:20><b>🏭 Sistema de Monitoreo IoT</b></size>\n<size:14>Patrones de Diseño: Singleton + Observer + Strategy</size>\n<size:12>Meta 1.4.2 - Yoon Jeffrey</size>
 
 ' ==========================================
 ' ENUMERACIONES Y CLASES DE DOMINIO
@@ -277,4 +281,5 @@ note bottom of ObservadorAlerta
 end note
 
 @enduml
+
 

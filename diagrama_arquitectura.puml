@@ -1,0 +1,243 @@
+@startuml Arquitectura del Sistema IoT
+
+!theme plain
+skinparam backgroundColor #F8F9FA
+skinparam componentBackgroundColor #FFFFFF
+skinparam componentBorderColor #2C3E50
+skinparam componentFontColor #2C3E50
+skinparam packageBackgroundColor #E8F4FD
+skinparam packageBorderColor #3498DB
+skinparam noteBackgroundColor #FFF3CD
+skinparam noteBorderColor #FFC107
+skinparam arrowColor #2C3E50
+skinparam arrowThickness 2
+skinparam interfaceBackgroundColor #E8F5E8
+skinparam interfaceBorderColor #28A745
+
+title <size:20><b>🏗️ Arquitectura del Sistema IoT</b></size>\n<size:14>Vista de Alto Nivel - Patrones de Diseño</size>\n<size:12>Meta 1.4.2 - Yoon Jeffrey</size>
+
+' ==========================================
+' CAPA DE PRESENTACIÓN
+' ==========================================
+
+package "Capa de Presentación" #F0F8FF {
+    component "SistemaMonitoreoIoT" as Sistema {
+        [main()] as Main
+        [configurarSistema()] as Config
+        [simularOperaciones()] as Sim
+        [mostrarEstadisticasFinales()] as Stats
+    }
+    
+    component "PruebaSistemaIoT" as Pruebas {
+        [main()] as TestMain
+        [realizarPruebasAdicionales()] as TestAdd
+        [mostrarEstadisticasDetalladas()] as TestStats
+    }
+}
+
+' ==========================================
+' CAPA DE LÓGICA DE NEGOCIO
+' ==========================================
+
+package "Capa de Lógica de Negocio" #FFF8E1 {
+    component "GestorSensores" as Gestor {
+        [Singleton] as Singleton1
+        [Map<String, Sensor>] as SensorMap
+        [registrarSensor()] as RegSensor
+        [actualizarValorSensor()] as UpdSensor
+        [obtenerEstadisticas()] as GetStats
+    }
+    
+    component "NotificadorAlertas" as Notificador {
+        [Singleton] as Singleton2
+        [List<ObservadorAlerta>] as Observadores
+        [verificarYNotificar()] as Verificar
+        [notificarObservadores()] as Notificar
+    }
+}
+
+' ==========================================
+' CAPA DE ESTRATEGIAS
+' ==========================================
+
+package "Capa de Estrategias" #E8F5E8 {
+    interface "EstrategiaAnalisis" as EstrategiaInterface
+    
+    component "EstrategiaAnalisisTemperatura" as TempStrategy {
+        [analizar()] as TempAnalyze
+        [UMBRAL_CRITICO = 80.0] as TempCrit
+        [UMBRAL_ADVERTENCIA = 70.0] as TempAdv
+    }
+    
+    component "EstrategiaAnalisisHumedad" as HumStrategy {
+        [analizar()] as HumAnalyze
+        [UMBRAL_CRITICO_ALTO = 90.0] as HumCritHigh
+        [UMBRAL_CRITICO_BAJO = 10.0] as HumCritLow
+    }
+    
+    component "EstrategiaAnalisisCalidadAire" as AirStrategy {
+        [analizar()] as AirAnalyze
+        [UMBRAL_CRITICO = 300.0] as AirCrit
+        [UMBRAL_ADVERTENCIA = 200.0] as AirAdv
+    }
+    
+    component "EstrategiaAnalisisEnergia" as EnergyStrategy {
+        [analizar()] as EnergyAnalyze
+        [UMBRAL_ENERGIA = 1000.0] as EnergyThresh
+    }
+    
+    component "EstrategiaAnalisisVibracion" as VibStrategy {
+        [analizar()] as VibAnalyze
+        [UMBRAL_CRITICO = 5.0] as VibCrit
+        [UMBRAL_ADVERTENCIA = 3.0] as VibAdv
+    }
+    
+    component "EstrategiaAnalisisBasica" as BasicStrategy {
+        [analizar()] as BasicAnalyze
+    }
+}
+
+' ==========================================
+' CAPA DE OBSERVADORES
+' ==========================================
+
+package "Capa de Observadores" #FFE8E8 {
+    interface "ObservadorAlerta" as ObservadorInterface
+    
+    component "NotificadorEmail" as EmailNotif {
+        [actualizar()] as EmailUpdate
+        [enviarEmailReal()] as EmailSend
+        [formatearMensajeEmail()] as EmailFormat
+    }
+    
+    component "NotificadorSMS" as SMSNotif {
+        [actualizar()] as SMSUpdate
+        [enviarSMSReal()] as SMSSend
+        [formatearMensajeSMS()] as SMSFormat
+    }
+    
+    component "NotificadorDashboard" as DashboardNotif {
+        [actualizar()] as DashboardUpdate
+        [actualizarDashboardReal()] as DashboardSend
+        [enviarDatosAPI()] as DashboardAPI
+    }
+    
+    component "RegistradorLogs" as LogNotif {
+        [actualizar()] as LogUpdate
+        [escribirLogReal()] as LogWrite
+        [formatearLog()] as LogFormat
+        [obtenerLogsPorNivel()] as LogFilter
+    }
+}
+
+' ==========================================
+' CAPA DE DOMINIO
+' ==========================================
+
+package "Capa de Dominio" #F0F8FF {
+    component "Sensor" as Sensor {
+        [id, tipo, valor] as SensorData
+        [ubicacion, ultimaActualizacion] as SensorMeta
+        [getters/setters] as SensorMethods
+    }
+    
+    component "Alerta" as Alerta {
+        [idSensor, mensaje] as AlertaData
+        [nivel, fechaHora] as AlertaMeta
+        [getters/setters] as AlertaMethods
+    }
+    
+    enum "NivelAlerta" as NivelAlerta {
+        CRITICO
+        ADVERTENCIA
+        INFORMATIVO
+    }
+}
+
+' ==========================================
+' RELACIONES ENTRE CAPAS
+' ==========================================
+
+' Relaciones de presentación
+Sistema --> Gestor : usa
+Sistema --> Notificador : usa
+Pruebas --> Gestor : prueba
+Pruebas --> Notificador : prueba
+
+' Relaciones de lógica de negocio
+Gestor --> Sensor : gestiona
+Notificador --> EstrategiaInterface : usa
+Notificador --> ObservadorInterface : notifica
+
+' Relaciones de estrategias
+TempStrategy ..|> EstrategiaInterface : implements
+HumStrategy ..|> EstrategiaInterface : implements
+AirStrategy ..|> EstrategiaInterface : implements
+EnergyStrategy ..|> EstrategiaInterface : implements
+VibStrategy ..|> EstrategiaInterface : implements
+BasicStrategy ..|> EstrategiaInterface : implements
+
+' Relaciones de observadores
+EmailNotif ..|> ObservadorInterface : implements
+SMSNotif ..|> ObservadorInterface : implements
+DashboardNotif ..|> ObservadorInterface : implements
+LogNotif ..|> ObservadorInterface : implements
+
+' Relaciones de dominio
+Sensor --> Alerta : genera
+Alerta --> NivelAlerta : tiene
+
+' ==========================================
+' NOTAS EXPLICATIVAS
+' ==========================================
+
+note top of Sistema
+    <b>🎯 Punto de Entrada</b>
+    • Configuración inicial
+    • Simulación de operaciones
+    • Estadísticas finales
+end note
+
+note top of Gestor
+    <b>🔒 Singleton - Gestión Centralizada</b>
+    • Única instancia
+    • Thread-safe
+    • Gestión de sensores
+end note
+
+note top of Notificador
+    <b>🔒 Singleton - Coordinación</b>
+    • Única instancia
+    • Gestión de observadores
+    • Integración con estrategias
+end note
+
+note right of EstrategiaInterface
+    <b>🎯 Strategy Pattern</b>
+    • Algoritmos intercambiables
+    • Especialización por tipo
+    • Cambio dinámico
+end note
+
+note right of ObservadorInterface
+    <b>👁️ Observer Pattern</b>
+    • Reacción a notificaciones
+    • Múltiples canales
+    • Desacoplamiento total
+end note
+
+note bottom of Sensor
+    <b>📡 Entidad de Dominio</b>
+    • Datos del sensor
+    • Metadatos
+    • Métodos de acceso
+end note
+
+note bottom of Alerta
+    <b>🚨 Entidad de Dominio</b>
+    • Información de alerta
+    • Nivel de criticidad
+    • Timestamp
+end note
+
+@enduml

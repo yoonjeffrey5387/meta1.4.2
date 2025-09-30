@@ -1,0 +1,234 @@
+@startuml Patrón Observer - Sistema IoT
+
+!theme plain
+skinparam backgroundColor #F8F9FA
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #2C3E50
+skinparam classFontColor #2C3E50
+skinparam packageBackgroundColor #E8F4FD
+skinparam packageBorderColor #3498DB
+skinparam noteBackgroundColor #FFF3CD
+skinparam noteBorderColor #FFC107
+skinparam arrowColor #2C3E50
+skinparam arrowThickness 2
+skinparam interfaceBackgroundColor #E8F5E8
+skinparam interfaceBorderColor #28A745
+
+title <size:20><b>👁️ Patrón Observer</b></size>\n<size:14>Sistema de Notificaciones IoT</size>\n<size:12>Meta 1.4.2 - Yoon Jeffrey</size>
+
+' ==========================================
+' INTERFACES OBSERVER
+' ==========================================
+
+package "Observer Interfaces" #E8F5E8 {
+    interface SujetoAlerta {
+        + registrarObservador(ObservadorAlerta) : void
+        + eliminarObservador(ObservadorAlerta) : void
+        + notificarObservadores(Alerta) : void
+    }
+    
+    interface ObservadorAlerta {
+        + actualizar(Alerta) : void
+        + obtenerTipoObservador() : String
+    }
+    
+    note top of SujetoAlerta
+        <b>📢 Sujeto (Subject)</b>
+        • Mantiene lista de observadores
+        • Notifica cambios de estado
+        • Desacoplamiento total
+    end note
+    
+    note top of ObservadorAlerta
+        <b>👁️ Observador (Observer)</b>
+        • Reacciona a notificaciones
+        • Implementación específica
+        • Múltiples canales
+    end note
+}
+
+' ==========================================
+' SUJETO CONCRETO
+' ==========================================
+
+package "Concrete Subject" #F0F8FF {
+    class NotificadorAlertas {
+        - static NotificadorAlertas instancia
+        - List<ObservadorAlerta> observadores
+        - EstrategiaAnalisis estrategia
+        --
+        - NotificadorAlertas()
+        + obtenerInstancia() : NotificadorAlertas
+        + verificarYNotificar(Sensor) : void
+        + registrarObservador(ObservadorAlerta) : void
+        + eliminarObservador(ObservadorAlerta) : void
+        + notificarObservadores(Alerta) : void
+        + establecerEstrategiaAnalisis(EstrategiaAnalisis) : void
+        + obtenerCantidadObservadores() : int
+        + obtenerObservadores() : List<ObservadorAlerta>
+        + obtenerEstrategiaActual() : EstrategiaAnalisis
+    }
+    
+    note right of NotificadorAlertas
+        <b>🎯 Sujeto Concreto</b>
+        • Singleton para coordinación
+        • Gestiona lista de observadores
+        • Usa Strategy para análisis
+        • Notifica automáticamente
+    end note
+}
+
+' ==========================================
+' OBSERVADORES CONCRETOS
+' ==========================================
+
+package "Concrete Observers" #FFF8E1 {
+    class NotificadorEmail {
+        - String destinatario
+        - String servidorSMTP
+        --
+        + actualizar(Alerta) : void
+        + obtenerTipoObservador() : String
+        - enviarEmailReal(Alerta, String) : void
+        - formatearMensajeEmail(Alerta) : String
+    }
+    
+    class NotificadorSMS {
+        - String numeroTelefono
+        - String proveedorSMS
+        --
+        + actualizar(Alerta) : void
+        + obtenerTipoObservador() : String
+        - enviarSMSReal(Alerta) : void
+        - formatearMensajeSMS(Alerta) : String
+    }
+    
+    class NotificadorDashboard {
+        - String urlDashboard
+        - String apiKey
+        --
+        + actualizar(Alerta) : void
+        + obtenerTipoObservador() : String
+        - actualizarDashboardReal(Alerta) : void
+        - enviarDatosAPI(Alerta) : void
+    }
+    
+    class RegistradorLogs {
+        - List<String> logs
+        - SimpleDateFormat formatter
+        - String archivoLog
+        --
+        + actualizar(Alerta) : void
+        + obtenerTipoObservador() : String
+        + obtenerLogs() : List<String>
+        + obtenerLogsPorNivel(NivelAlerta) : List<String>
+        + limpiarLogs() : void
+        + obtenerCantidadLogs() : int
+        - escribirLogReal(String) : void
+        - formatearLog(Alerta) : String
+    }
+}
+
+' ==========================================
+' CLASES DE DOMINIO
+' ==========================================
+
+package "Domain Classes" #FFE8E8 {
+    class Alerta {
+        - String idSensor
+        - String mensaje
+        - NivelAlerta nivel
+        - Date fechaHora
+        --
+        + getIdSensor() : String
+        + getMensaje() : String
+        + getNivel() : NivelAlerta
+        + getFechaHora() : Date
+        + toString() : String
+    }
+    
+    enum NivelAlerta {
+        CRITICO
+        ADVERTENCIA
+        INFORMATIVO
+    }
+    
+    class Sensor {
+        - String id
+        - String tipo
+        - double valor
+        - String ubicacion
+        - Date ultimaActualizacion
+        --
+        + getId() : String
+        + getTipo() : String
+        + getValor() : double
+        + setValor(double) : void
+        + getUbicacion() : String
+        + getUltimaActualizacion() : Date
+        + setUltimaActualizacion(Date) : void
+        + toString() : String
+    }
+}
+
+' ==========================================
+' RELACIONES
+' ==========================================
+
+' Relaciones Observer
+NotificadorAlertas ..|> SujetoAlerta : implements
+NotificadorAlertas ||--o{ ObservadorAlerta : notifica
+
+' Observadores concretos
+NotificadorEmail ..|> ObservadorAlerta : implements
+NotificadorSMS ..|> ObservadorAlerta : implements
+NotificadorDashboard ..|> ObservadorAlerta : implements
+RegistradorLogs ..|> ObservadorAlerta : implements
+
+' Relaciones de dominio
+Sensor ||--o{ Alerta : genera
+Alerta ||--|| NivelAlerta : tiene
+
+' Relaciones con contexto
+NotificadorAlertas ||--o{ Alerta : notifica
+
+' ==========================================
+' NOTAS EXPLICATIVAS
+' ==========================================
+
+note right of NotificadorEmail
+    <b>📧 Notificador Email</b>
+    • Envía alertas por correo
+    • Formato HTML/texto
+    • Configuración SMTP
+end note
+
+note right of NotificadorSMS
+    <b>📱 Notificador SMS</b>
+    • Envía alertas por SMS
+    • Mensajes cortos
+    • Integración con proveedores
+end note
+
+note right of NotificadorDashboard
+    <b>📊 Notificador Dashboard</b>
+    • Actualiza dashboard web
+    • API REST
+    • Visualización en tiempo real
+end note
+
+note right of RegistradorLogs
+    <b>📝 Registrador de Logs</b>
+    • Registra todas las alertas
+    • Filtrado por nivel
+    • Persistencia en archivo
+end note
+
+note bottom of Alerta
+    <b>🚨 Clase Alerta</b>
+    • Contiene información de la alerta
+    • Nivel de criticidad
+    • Timestamp de generación
+end note
+
+@enduml
